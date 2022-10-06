@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    
+</head>
+<nav class="navbar navbar-expand-lg bg-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Wishlist</a>
+        <button class="btn btn-outline-success"><a style="color:black;" href="{% url 'wishlist:logout' %}">Logout</a></button>
+    </div>
+  </nav>
+
+
+<div class="text-center bg-success p-2 text-dark bg-opacity-10" >
+    <h5 class="fst-italic">Welcome, {{nama}} </h5>
+</div>
+
+<div>
+    <form method="POST" action="" id="form_wishlist" class="mt-3 mb-3 mx-5">
+        {% csrf_token %}
+        <label for="nama_barang">Nama Barang</label>
+        <input type="text" name="nama_barang" class="form-control" id="nama_barang">
+
+        <label for="harga_barang">Harga Barang</label>
+        <br>
+        <input type="number" id="harga_barang" name="harga_barang" class="form_control">
+        <br>
+        <label for="deskripsi">Deskripsi Barang</label>
+        <input type="text" id="deskripsi" name="deskripsi" class="form-control">
+    
+        <br>
+        <button onclick="submitForm()" type="submit" id="add_wishlist">Submit</button>
+    </form>
+</div>
+<table class="table table-success table-striped table-hover table-sm" style="color: black;">
+    <tr>
+    <th class="text-center table-dark">Nama Barang</th>
+    <th class="text-start table-dark">Harga Barang</th>
+    <th class="text-center table-dark">Deskripsi</th>
+    </tr>
+    {% comment %} Tambahkan data di bawah baris ini {% endcomment %}
+    {% for barang in list_barang %}
+    <tr>
+        <th class="text-center">{{barang.nama_barang}}</th>
+        <th>{{barang.harga_barang}}</th>
+        <th class="table-sm">{{barang.deskripsi}}</th>
+    </tr>
+{% endfor %}
+</table>
+<h5 class="fs-6">Sesi terakhir login: {{ last_login }}</h5>
+{% endblock content %}
+
+<script>
+    let tab;
+        function loadData() {
+            $.get("{% url 'wishlist:show_json' %}", function (data) {
+            tab = `<tr>
+                    <th>Nama Barang</th>
+                    <th>Harga Barang</th>
+                    <th>Deskripsi</th>
+                </tr>`;
+
+            for (let item of data) {
+                tab += `<tr> 
+                <td>${item.fields.nama_barang} </td>
+                <td>${item.fields.harga_barang}</td>
+                <td>${item.fields.deskripsi}</td> 
+                </tr>`;}
+
+            document.getElementById("tbl").innerHTML = tab;
+            });
+        }
+    
+    $(document).ready(function () {
+        loadData();
+    });
+
+  $(document).on("submit", "#form_wishlist", function (e) {
+    e.preventDefault();
+    $.ajax({
+      type: "POST",
+      url: "{% url 'wishlist:ajax_submit' %}",
+      data: {
+        nama_barang: $("#items_name").val(),
+        harga_barang: $("#items_pr").val(),
+        deskripsi: $("#items_descrip").val(),
+        csrfmiddlewaretoken: "{{ csrf_token }}",
+      },
+      dataType: "json",
+      success: function () {
+        loadData();
+      },
+    });
+  });
+
+  function submitForm() {
+    if (localStorage.clickcount) {
+        localStorage.clickcount = Number(localStorage.clickcount)+1;
+    } else {
+        localStorage.clickcount = 1;
+    }
+}
+</script>
